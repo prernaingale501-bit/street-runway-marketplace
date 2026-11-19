@@ -61,6 +61,34 @@ class MarketplaceApiTest extends TestCase
         $this->getJson('/api/vendor/products')->assertForbidden();
     }
 
+    public function test_vendor_can_register_apply_and_get_approved_by_admin_end_to_end(): void
+    {
+        Storage::fake('local');
+        Notification::fake();
+
+        $registration = $this->postJson('/api/auth/register', [
+            'name' => 'New Seller', 'email' => 'new-seller@example.test', 'password' => 'seller-password-123', 'password_confirmation' => 'seller-password-123',
+        ])->assertCreated()->assertJsonPath('user.role', 'customer');
+        $sellerToken = $registration->json('token');
+
+        $application = $this->withToken($sellerToken)->postJson('/api/vendor-applications', $this->applicationData())
+            ->assertCreated()->assertJsonPath('data.status', 'pending')->assertJsonPath('data.store_name', 'New Label');
+        $applicationId = $application->json('data.id');
+        $this->withToken($sellerToken)->getJson('/api/vendor-applications/me')->assertOk()->assertJsonPath('data.status', 'pending');
+        $this->withToken($sellerToken)->getJson('/api/vendor/dashboard')->assertForbidden();
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/admin/vendor-applications?status=pending')->assertOk()->assertJsonFragment(['id' => $applicationId]);
+        $this->patchJson('/api/admin/vendor-applications/'.$applicationId, ['status' => 'approved'])
+            ->assertOk()->assertJsonPath('data.status', 'approved');
+
+        $seller = User::where('email', 'new-seller@example.test')->firstOrFail();
+        $this->assertSame('vendor', $seller->role);
+        Sanctum::actingAs($seller);
+        $this->getJson('/api/vendor/dashboard')->assertOk();
+    }
+
     public function test_admin_approval_unlocks_vendor_product_creation_and_public_listing(): void
     {
         Notification::fake();
