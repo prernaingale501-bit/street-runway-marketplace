@@ -32,11 +32,23 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   const token = getApiToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
-  const response = await fetch(`${baseUrl}/${path.replace(/^\//, "")}`, {
-    ...options,
-    headers,
-    credentials: "omit",
-  });
+  const timeout = new AbortController();
+  const timeoutId = options.signal ? undefined : setTimeout(() => timeout.abort(), 15000);
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/${path.replace(/^\//, "")}`, {
+      ...options,
+      headers,
+      signal: options.signal ?? timeout.signal,
+      credentials: "omit",
+    });
+  } catch (error) {
+    if (timeout.signal.aborted) throw new Error("The API did not respond within 15 seconds. Check that Laravel is running and VITE_API_BASE_URL is correct.");
+    if (error instanceof TypeError) throw new Error("Could not reach the Laravel API. Start Laravel and check that VITE_API_BASE_URL points to it.");
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
   const contentType = response.headers.get("content-type") ?? "";
   const payload: unknown = contentType.includes("application/json") ? await response.json() : await response.text();
   if (!response.ok) {
