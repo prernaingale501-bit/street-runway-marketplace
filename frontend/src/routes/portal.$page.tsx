@@ -9,7 +9,6 @@ import type { VendorApplicationStatus } from "@/types";
 export const Route = createFileRoute("/portal/$page")({ component: Portal });
 
 type Application = { fullName:string; storeName:string; email:string; mobile:string; businessType:string; businessAddress:string; city:string; state:string; country:string; pincode:string; gstNumber:string; panNumber:string; description:string; categories:string[]; status:VendorApplicationStatus };
-type LoginRole = "customer" | "vendor" | "admin";
 type ApiApplication = { id:number; store_name:string; mobile:string; business_type:string; business_address:string; city:string; state:string; country:string; pincode:string; gst_number?:string|null; pan_number:string; description:string; categories:string[]; status:VendorApplicationStatus; applicant?:{name:string;email:string} };
 const fromApiApplication=(raw:ApiApplication, account?:{name?:string;email?:string}|null):Application=>({fullName:raw.applicant?.name||account?.name||"Seller",email:raw.applicant?.email||account?.email||"",storeName:raw.store_name,mobile:raw.mobile,businessType:raw.business_type,businessAddress:raw.business_address,city:raw.city,state:raw.state,country:raw.country,pincode:raw.pincode,gstNumber:raw.gst_number||"",panNumber:raw.pan_number,description:raw.description,categories:raw.categories||[],status:raw.status});
 const STORE_KEY="street-runway-vendor-application";
@@ -17,7 +16,7 @@ const readApplication=():Application|null=>{try{return typeof window==="undefine
 const saveApplication=(app:Application)=>localStorage.setItem(STORE_KEY,JSON.stringify(app));
 const titleFor=(page:string)=>({"vendor-apply":"Become a seller",vendor:"Seller studio",admin:"Marketplace admin",store:"The Linen Edit",account:"Your account",login:"Sign in",register:"Create account",orders:"Your orders",wishlist:"Saved pieces",info:"Information & support"}[page]||"Fashion Marketplace");
 
-function Portal(){const {page}=useParams({from:"/portal/$page"});const navigate=useNavigate({from:"/portal/$page"});const [application,setApplication]=useState<Application|null>(null);const [notice,setNotice]=useState("");const [account,setAccount]=useState(()=>{try{return typeof window==="undefined"?null:JSON.parse(localStorage.getItem("street-runway-customer")||"null")}catch{return null}});const [tab,setTab]=useState("Overview");const [loginRole,setLoginRole]=useState<LoginRole>("customer");
+function Portal(){const {page}=useParams({from:"/portal/$page"});const navigate=useNavigate({from:"/portal/$page"});const [application,setApplication]=useState<Application|null>(null);const [notice,setNotice]=useState("");const [account,setAccount]=useState(()=>{try{return typeof window==="undefined"?null:JSON.parse(localStorage.getItem("street-runway-customer")||"null")}catch{return null}});const [tab,setTab]=useState("Overview");
  const inform=useCallback((message:string)=>{setNotice(message);window.setTimeout(()=>setNotice(""),3500)},[]);
  const refreshVendorStatus=useCallback(async()=>{if(!isApiConfigured()||!getApiToken()){setApplication(readApplication());return;}try{const result=await services.vendors.status<{data:ApiApplication}>();const next=fromApiApplication(result.data,account);setApplication(next);saveApplication(next);}catch(error){if(error instanceof ApiError&&error.status===404)setApplication(null);else inform(error instanceof Error?error.message:"Could not load your seller application.");}},[account,inform]);
  useEffect(()=>{void refreshVendorStatus();},[refreshVendorStatus]);
@@ -37,20 +36,19 @@ function Portal(){const {page}=useParams({from:"/portal/$page"});const navigate=
         ?await services.auth.register<AuthResult>(payload)
         :await services.auth.login<AuthResult>(payload);
       setApiToken(result.token);
+      let destination:"/portal/account"|"/portal/admin"|"/portal/vendor"="/portal/account";
       if(page==="login"){
-        let roleError="";
-        if(loginRole==="admin"&&result.user.role!=="admin")roleError="This account is not an admin account. Choose the correct login tab.";
-        if(loginRole==="customer"&&result.user.role!=="customer")roleError="This account is not a customer account. Choose the correct login tab.";
-        if(loginRole==="vendor"&&result.user.role!=="vendor"){
-          if(result.user.role!=="customer")roleError="This account cannot use vendor sign in.";
-          else try{await services.vendors.status<{data:ApiApplication}>();}catch{roleError="No vendor application was found for this account.";}
+        if(result.user.role==="admin")destination="/portal/admin";
+        else if(result.user.role==="vendor")destination="/portal/vendor";
+        else if(result.user.role==="customer"){
+          try{await services.vendors.status<{data:ApiApplication}>();destination="/portal/vendor";}
+          catch(error){if(!(error instanceof ApiError&&error.status===404))throw error;}
         }
-        if(roleError){try{await services.auth.logout();}catch{}clearApiToken();throw new Error(roleError);}
       }
       localStorage.setItem("street-runway-customer",JSON.stringify(result.user));
       setAccount(result.user);
       inform("Signed in successfully.");
-      if(page==="login")void navigate({to:loginRole==="admin"?"/portal/admin":loginRole==="vendor"?"/portal/vendor":"/portal/account"});
+      if(page==="login")void navigate({to:destination});
     }catch(error){inform(error instanceof Error?error.message:"Sign in failed.");}
   };
  const links=[{name:"Overview",icon:LayoutDashboard},{name:"Products",icon:Package},{name:"Orders",icon:ClipboardList},{name:"Inventory",icon:Box},{name:"Sales reports",icon:ChartNoAxesCombined},{name:"Store profile",icon:Store},{name:"Earnings & payouts",icon:Wallet}];
@@ -59,7 +57,7 @@ function Portal(){const {page}=useParams({from:"/portal/$page"});const navigate=
  {page==="vendor"&&<VendorStudio application={application} tab={tab} setTab={setTab} inform={inform}/>}
  {page==="store"&&<PublicVendorStore/>}
  {page==="admin"&&<AdminPanel inform={inform}/>}
-  {(page==="login"||page==="register")&&<div className="portal-card account-card"><p>{page==="login"?"Sign in to keep your orders and saved styles together.":"Create an account for a more personal shopping experience."}</p>{account?<><div className="profile-summary"><div className="profile-avatar">{account.name?.[0]||"S"}</div><div><b>{account.name}</b><small>{account.email}</small></div><BadgeCheck size={19}/></div><button className="portal-secondary" onClick={async()=>{try{if(getApiToken())await services.auth.logout();}catch{}clearApiToken();localStorage.removeItem("street-runway-customer");setAccount(null);inform("You have signed out.")}}>Sign out</button></>:<form className="portal-form" onSubmit={submitAuth}>{page==="login"&&<><div className="login-role-tabs" role="tablist" aria-label="Choose account type">{(["customer","vendor","admin"] as const).map(role=><button type="button" role="tab" aria-selected={loginRole===role} className="portal-secondary" key={role} onClick={()=>setLoginRole(role)}>{role==="customer"?"Customer login":role==="vendor"?"Vendor login":"Admin login"}</button>)}</div><small className="login-role-hint">{loginRole==="customer"?"Sign in to manage your customer account.":loginRole==="vendor"?"Use your pending seller applicant or approved vendor account.":"Marketplace administrator access."}</small></>}{page==="register"&&<Field label="Full name *" name="name" required/>}<Field label="Email address *" name="email" type="email" required/><label>Password *<input name="password" type="password" minLength={8} required autoComplete={page==="login"?"current-password":"new-password"}/></label>{page==="register"&&<Field label="Mobile number" name="phone" type="tel"/>}<button className="portal-primary">{page==="login"?"Sign in":"Create account"} <ArrowRight size={16}/></button><a className="portal-text-link" href="mailto:hello@streetrunway.in?subject=Password%20reset">Forgot password?</a><small>Authentication is handled by the Laravel API.</small></form>}</div>}
+  {(page==="login"||page==="register")&&<div className="portal-card account-card"><p>{page==="login"?"Sign in to keep your orders and saved styles together.":"Create an account for a more personal shopping experience."}</p>{account?<><div className="profile-summary"><div className="profile-avatar">{account.name?.[0]||"S"}</div><div><b>{account.name}</b><small>{account.email}</small></div><BadgeCheck size={19}/></div><button className="portal-secondary" onClick={async()=>{try{if(getApiToken())await services.auth.logout();}catch{}clearApiToken();localStorage.removeItem("street-runway-customer");setAccount(null);inform("You have signed out.")}}>Sign out</button></>:<form className="portal-form" onSubmit={submitAuth}>{page==="register"&&<Field label="Full name *" name="name" required/>}<Field label="Email address *" name="email" type="email" required/><label>Password *<input name="password" type="password" minLength={8} required autoComplete={page==="login"?"current-password":"new-password"}/></label>{page==="register"&&<Field label="Mobile number" name="phone" type="tel"/>}<button className="portal-primary">{page==="login"?"Sign in":"Create account"} <ArrowRight size={16}/></button><a className="portal-text-link" href="mailto:hello@streetrunway.in?subject=Password%20reset">Forgot password?</a><small>Authentication is handled by the Laravel API.</small></form>}</div>}
  {(page==="account"||page==="orders"||page==="wishlist")&&<CustomerArea account={account} submitAccount={submitAccount} page={page} inform={inform}/>}
  {page==="info"&&<InfoPage/>}
  {!(["vendor-apply","vendor","admin","account","login","register","orders","wishlist","info"].includes(page))&&<div className="portal-card"><h2>That page isn’t here yet.</h2><Link className="portal-primary" to="/">Return to the shop <ArrowRight size={16}/></Link></div>}
