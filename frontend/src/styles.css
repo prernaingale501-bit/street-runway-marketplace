@@ -220,5 +220,7 @@
 @media(max-width:760px){.public-store-head{grid-template-columns:1fr;padding:14px}.public-store-head>img{height:210px}.store-product-grid{grid-template-columns:repeat(2,1fr)}}
 .coupon-form { display:flex; margin:8px 0 3px; }.coupon-form input { flex:1; min-width:0; padding:9px; border:1px solid #ded8ce; outline-color:#a85d43; font-size:9px; }.coupon-form button { padding:0 13px; border:1px solid #292723; color:white; background:#292723; font-size:9px; }.coupon-success,.coupon-error { display:block; margin:4px 0 9px; font-size:8px; }.coupon-success { color:#53744d; }.coupon-error { color:#a04739; }.cart-summary .cart-total { padding-top:10px; border-top:1px solid #e5dfd6; font-size:13px; }.payment-choice select { padding:9px; border:1px solid #ddd7cf; background:white; font-size:10px; }
 
-.seller-header-link { color:#a85d43; text-decoration:none; font-size:10px; font-weight:700; white-space:nowrap; }
-@media(max-width:760px) { .seller-header-link { font-size:9px; } }
+.seller-header-link,.seller-signin-link { color:#a85d43; text-decoration:none; font-size:10px; font-weight:700; white-space:nowrap; }
+.seller-signin-link { color:#4e4b45; }
+.mobile-seller-login { display:none; }
+@media(max-width:760px) { .seller-header-link { font-size:9px; }.seller-signin-link { display:none; }.mobile-seller-login { display:flex; width:45%; color:#a85d43; font-size:11px; font-weight:700; text-decoration:none; padding:10px 0; } }
