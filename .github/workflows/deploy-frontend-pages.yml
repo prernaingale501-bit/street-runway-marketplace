@@ -49,6 +49,10 @@ jobs:
         run: |
           cp frontend/dist/client/_shell.html frontend/dist/client/index.html
           cp frontend/dist/client/_shell.html frontend/dist/client/404.html
+          for route in portal/vendor-apply portal/login portal/vendor portal/admin; do
+            mkdir -p "frontend/dist/client/$route"
+            cp frontend/dist/client/_shell.html "frontend/dist/client/$route/index.html"
+          done
           touch frontend/dist/client/.nojekyll
 
       - name: Configure GitHub Pages

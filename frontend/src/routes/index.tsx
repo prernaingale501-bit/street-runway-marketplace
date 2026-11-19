@@ -51,7 +51,7 @@ function Index() {
         {categories.map(c => <button key={c.slug} onClick={() => { setCategory(c.name); setMobileMenu(false); document.querySelector("#products")?.scrollIntoView({behavior:"smooth"}); }}>{c.name}</button>)}
         <button className="nav-sale" onClick={() => { setSaleOnly(true); document.querySelector("#products")?.scrollIntoView({behavior:"smooth"}); }}>Sale</button>
       </nav>
-      <div className="header-actions"><label className="search-box"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search styles, labels…"/><kbd>⌘ K</kbd></label><Link className="icon-button" aria-label="Account" to="/portal/account"><UserRound size={19}/></Link><Link className="icon-button" aria-label="Wishlist" to="/portal/wishlist"><Heart size={20}/><sup>{wishlist.length}</sup></Link><button className="icon-button" aria-label="Cart" onClick={() => setCartOpen(true)}><ShoppingBag size={20}/><sup>{cart.reduce((n,x) => n+x.qty,0)}</sup></button></div>
+      <div className="header-actions"><label className="search-box"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search styles, labels…"/><kbd>⌘ K</kbd></label><Link className="seller-header-link" to="/portal/vendor-apply">Sell with us</Link><Link className="icon-button" aria-label="Account" to="/portal/account"><UserRound size={19}/></Link><Link className="icon-button" aria-label="Wishlist" to="/portal/wishlist"><Heart size={20}/><sup>{wishlist.length}</sup></Link><button className="icon-button" aria-label="Cart" onClick={() => setCartOpen(true)}><ShoppingBag size={20}/><sup>{cart.reduce((n,x) => n+x.qty,0)}</sup></button></div>
     </header>
 
     <main id="top">

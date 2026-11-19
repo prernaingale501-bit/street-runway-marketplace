@@ -224,3 +224,5 @@
 .login-role-tabs .portal-secondary { min-height:38px; padding:4px 6px; font-size:9px!important; }
 .login-role-tabs .portal-secondary[aria-selected="true"] { color:white!important; background:#a85d43; border-color:#a85d43; }
 .login-role-hint { color:#81796e; font-size:9px; }
+.seller-header-link { color:#a85d43; text-decoration:none; font-size:10px; font-weight:700; white-space:nowrap; }
+@media(max-width:760px) { .seller-header-link { font-size:9px; } }
