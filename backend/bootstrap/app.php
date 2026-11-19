@@ -13,8 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Enable Sanctum's first-party SPA cookie authentication alongside API tokens.
-        $middleware->statefulApi();
+        // Use Laravel's default web and API middleware groups. The API uses Sanctum bearer tokens.
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
