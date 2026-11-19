@@ -94,17 +94,17 @@ const reviewBodies = [
 export function reviewsFor(productId: string): Review[] {
   const n = Number(productId.replace(/\D/g, "")) || 1;
   return Array.from({ length: 5 }, (_, i) => {
-    const b = reviewBodies[(n + i) % reviewBodies.length];
+    const b = reviewBodies[(n + i) % reviewBodies.length] ?? reviewBodies[0]!;
     return {
       id: `${productId}-r${i}`,
       productId,
-      author: reviewers[(n * 3 + i) % reviewers.length],
-      rating: [5, 5, 4, 5, 3][(n + i) % 5],
+      author: reviewers[(n * 3 + i) % reviewers.length] ?? "Verified buyer",
+      rating: [5, 5, 4, 5, 3][(n + i) % 5] ?? 5,
       title: b.title,
       body: b.body,
       date: `2026-${String(((n + i) % 10) + 1).padStart(2, "0")}-${String(((n * 7 + i) % 27) + 1).padStart(2, "0")}`,
       verified: i !== 3,
-      size: ["S", "M", "L", "M", "XL"][i],
+      size: ["S", "M", "L", "M", "XL"][i] ?? "M",
     };
   });
 }

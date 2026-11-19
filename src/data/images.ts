@@ -13,20 +13,20 @@ import blockHeels from "@/assets/products/block-heels.jpg";
 import loafers from "@/assets/products/loafers.jpg";
 import leatherTote from "@/assets/products/leather-tote.jpg";
 import sunglasses from "@/assets/products/sunglasses.jpg";
-import watch from "@/assets/products/watch.jpg";
-import lipstick from "@/assets/products/lipstick.jpg";
-import perfume from "@/assets/products/perfume.jpg";
+import watch from "@/assets/products/sunglasses.jpg"; // TODO: replace with a watch photo
+import lipstick from "@/assets/products/satin-cami.jpg"; // TODO: replace with a lipstick photo
+import perfume from "@/assets/products/leather-tote.jpg"; // TODO: replace with a perfume photo
 
-import catWomen from "@/assets/categories/women.jpg";
-import catMen from "@/assets/categories/men.jpg";
-import catKids from "@/assets/categories/kids.jpg";
-import catFootwear from "@/assets/categories/footwear.jpg";
-import catAccessories from "@/assets/categories/accessories.jpg";
-import catBeauty from "@/assets/categories/beauty.jpg";
+import catWomen from "@/assets/products/linen-dress.jpg";
+import catMen from "@/assets/products/men-linen-shirt.jpg";
+import catKids from "@/assets/products/kids-dress.jpg";
+import catFootwear from "@/assets/products/sneakers.jpg";
+import catAccessories from "@/assets/products/leather-tote.jpg";
+import catBeauty from "@/assets/products/satin-cami.jpg"; // TODO: replace with a beauty photo
 
 import hero from "@/assets/hero-runway.jpg";
-import promoSale from "@/assets/promo-sale.jpg";
-import promoVendor from "@/assets/promo-vendor.jpg";
+import promoSale from "@/assets/products/black-blazer.jpg";
+import promoVendor from "@/assets/products/ivory-kurta.jpg";
 
 export const img = {
   linenDress, blackBlazer, ivoryKurta, satinCami, menLinenShirt, menBomber, menGraphicTee,
