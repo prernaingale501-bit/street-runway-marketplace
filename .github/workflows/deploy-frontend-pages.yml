@@ -1,0 +1,64 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-frontend-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build static frontend for project Pages URL
+        working-directory: frontend
+        env:
+          GITHUB_PAGES: "true"
+          VITE_API_BASE_URL: ""
+        run: npm run build
+
+      - name: Add GitHub Pages entry and route fallback
+        run: |
+          cp frontend/dist/client/_shell.html frontend/dist/client/index.html
+          cp frontend/dist/client/_shell.html frontend/dist/client/404.html
+          touch frontend/dist/client/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist/client
+
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4
